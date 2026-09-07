@@ -1,10 +1,10 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { HomeScreen } from "@/components/home/home-screen";
+import { LocalGameScreen } from "@/components/game/local-game-screen";
 
 export default function Page() {
   return (
-    <AppShell view="home">
-      <HomeScreen />
+    <AppShell view="play">
+      <LocalGameScreen />
     </AppShell>
   );
 }
