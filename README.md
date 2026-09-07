@@ -1,13 +1,13 @@
 ﻿# trio — Tic-tac-toe
 
-A learning frontend built with Next.js (App Router), React, TypeScript, and Tailwind CSS. This standalone project lives in `C:\laragon\www\projetos\tic-tac-toe`.
+A learning frontend built with Next.js (App Router), React, TypeScript, and Tailwind CSS. This standalone project lives in `{path}/tic-tac-toe`.
 
 ## Getting started
 
 Requirements: Node.js 24 and npm.
 
 ```powershell
-cd C:\laragon\www\projetos\tic-tac-toe
+cd "{path}/tic-tac-toe"
 npm install
 npm run dev
 ```
