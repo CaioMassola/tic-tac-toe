@@ -91,7 +91,7 @@ Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes to `main`, pull requests, and manual dispatches from the Actions tab. It uses Node.js 24 and installs dependencies from `package-lock.json` with `npm ci`.
 
-Checks run in order: lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium. A failed step stops the remaining checks.
+Checks run in order: lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, run `npm run build` first; outside CI, Playwright starts the development server.
 
 ## Code coverage
 
