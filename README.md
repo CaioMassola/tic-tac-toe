@@ -87,6 +87,12 @@ For browser testing, run `npm run test:e2e`. Playwright automatically starts the
 
 Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets, and all 255,168 possible complete games starting with X. Playwright checks languages, persistence, themes, gameplay, and forms at desktop and mobile sizes.
 
+## Continuous integration
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes to `main`, pull requests, and manual dispatches from the Actions tab. It uses Node.js 24 and installs dependencies from `package-lock.json` with `npm ci`.
+
+Checks run in order: lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium. A failed step stops the remaining checks.
+
 ## Code coverage
 
 The project uses `@vitest/coverage-v8`, which is compatible with Vitest. `karma-coverage` is a plugin for the Karma runner and does not collect coverage from Vitest tests.
