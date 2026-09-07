@@ -93,6 +93,20 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes to `mai
 
 Checks run in order: lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, run `npm run build` first; outside CI, Playwright starts the development server.
 
+### Vercel deployment
+
+After validation succeeds on `main`, the `deploy` job builds and publishes production artifacts to the existing Vercel project `tic-tac-toe`. Pull requests only run validation. `vercel.json` disables automatic Git deployments so they cannot bypass CI.
+
+Configure these repository secrets in GitHub under **Settings > Secrets and variables > Actions**:
+
+- `VERCEL_TOKEN`: a Vercel token with access to the project's team.
+- `VERCEL_ORG_ID`: the account/team ID that owns the project.
+- `VERCEL_PROJECT_ID`: the ID of the existing `tic-tac-toe` project, not its name.
+
+The IDs are available in `.vercel/project.json` after linking the existing project with the Vercel CLI. Keep tokens and `.vercel` files out of Git. See the [official Vercel setup guide](https://vercel.com/kb/guide/how-can-i-use-github-actions-with-vercel).
+
+Missing secrets fail the deployment job with an explicit error. Once configured, rerun the failed job from GitHub Actions or manually run the CI workflow on `main`. Until configured, the current live deployment stays online but new production deployments cannot run.
+
 ## Code coverage
 
 The project uses `@vitest/coverage-v8`, which is compatible with Vitest. `karma-coverage` is a plugin for the Karma runner and does not collect coverage from Vitest tests.
