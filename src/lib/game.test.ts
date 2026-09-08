@@ -45,6 +45,8 @@ describe("local game rules", () => {
     expect(state.round).toBe(2);
     expect(state.board.every((cell) => cell === null)).toBe(true);
     expect(state.scores.X).toBe(1);
+    const thirdRound = gameReducer(play([0, 3, 1, 4, 2], state), { type: "next" });
+    expect(thirdRound.turn).toBe("X");
     expect(gameReducer(initialGame, { type: "next" })).toBe(initialGame);
   });
   it("resets the entire session", () => {

@@ -100,18 +100,39 @@ test("two browsers share a real room and reject a third player", async ({
 
     await playRound([1, 4, 2, 5, 3]);
     for (const participant of [page, guest]) {
-      await expect(participant.getByRole("status")).toContainText("Ana venceu!");
+      await expect(participant.getByRole("status")).toContainText(
+        participant === page ? "Você venceu!" : "Você perdeu!",
+      );
       await expect(participant.getByTestId("score-X")).toHaveText("1");
     }
-    await expect(guest.getByRole("button", { name: "Jogar novamente" })).toHaveCount(0);
+    await expect(guest.getByRole("button", { name: "Pedir revanche" })).toBeEnabled();
     await page.getByRole("button", { name: "Jogar novamente" }).click();
+    await expect(
+      page.getByRole("button", { name: "Confirmado", exact: true }),
+    ).toBeDisabled();
+    await expect(
+      guest.getByText("Seu amigo quer jogar novamente. Confirme para começar."),
+    ).toBeVisible();
+    await expect(guest.getByRole("status")).toContainText("Você perdeu!");
+    await expect(guest.getByRole("heading", { name: "Você perdeu!" })).toHaveCSS(
+      "color",
+      "rgb(248, 113, 113)",
+    );
+    await guest.getByRole("button", { name: "Ana quer jogar novamente" }).click();
     await expect(guest.getByRole("status")).toContainText("Vez de Beto");
     await playRound([1, 4, 2, 5, 3], true);
     for (const participant of [page, guest]) {
-      await expect(participant.getByRole("status")).toContainText("Beto venceu!");
+      await expect(participant.getByRole("status")).toContainText(
+        participant === guest ? "Você venceu!" : "Você perdeu!",
+      );
       await expect(participant.getByTestId("score-O")).toHaveText("1");
     }
-    await page.getByRole("button", { name: "Jogar novamente" }).click();
+    await guest.getByRole("button", { name: "Jogar novamente" }).click();
+    await expect(
+      guest.getByRole("button", { name: "Confirmado", exact: true }),
+    ).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("Você perdeu!");
+    await page.getByRole("button", { name: "Beto quer jogar novamente" }).click();
     await expect(guest.getByRole("status")).toContainText("Vez de Ana");
     await playRound([1, 2, 3, 5, 4, 6, 8, 7, 9]);
     for (const participant of [page, guest]) {

@@ -16,6 +16,9 @@ type Props = TranslationProps & {
 };
 
 export function OnlineGame({ t, game, players, mark, blocked, onMove, onNext }: Props) {
+  const ready = game.rematchReady.includes(mark);
+  const opponentReady = game.rematchReady.includes(mark === "X" ? "O" : "X");
+
   function getPlayerName(player: Mark) {
     return players[player === "X" ? 0 : 1].nickname;
   }
@@ -30,6 +33,7 @@ export function OnlineGame({ t, game, players, mark, blocked, onMove, onNext }: 
         winner={game.winner}
         turn={game.turn}
         getPlayerName={getPlayerName}
+        playerMark={mark}
       />
       <fieldset disabled={blocked || game.turn !== mark} aria-label={t.board}>
         <GameBoard
@@ -43,13 +47,30 @@ export function OnlineGame({ t, game, players, mark, blocked, onMove, onNext }: 
       </fieldset>
       <div className="text-center my-5">
         {game.winner ? (
-          mark === "X" ? (
-            <button className="button-primary" disabled={blocked} onClick={onNext}>
-              {t.next}
+          <>
+            <button
+              className="button-primary"
+              disabled={blocked || ready}
+              onClick={onNext}
+            >
+              {ready
+                ? t.rematchConfirmed
+                : opponentReady
+                  ? t.rematchRequest.replace("{name}", () =>
+                      getPlayerName(mark === "X" ? "O" : "X"),
+                    )
+                  : game.winner !== "draw" && game.winner !== mark
+                    ? t.requestRematch
+                    : t.next}
             </button>
-          ) : (
-            <p className="text-sm text-muted">{t.waitingRematch}</p>
-          )
+            <p className="text-sm text-muted mt-3" aria-live="polite">
+              {ready
+                ? t.waitingRematch
+                : opponentReady
+                  ? t.opponentRematchReady
+                  : t.rematchPrompt}
+            </p>
+          </>
         ) : (
           <p className="text-sm text-muted">
             {game.turn === mark ? t.onlineYourTurn : t.onlineOpponentTurn}

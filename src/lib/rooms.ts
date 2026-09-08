@@ -4,6 +4,7 @@ import type { GameState, Mark } from "./game";
 export type OnlineGameState = Omit<GameState, "starter"> & {
   winner: Mark | "draw" | null;
   line: number[];
+  rematchReady: Mark[];
 };
 
 export type RoomCommand = { type: "start" | "move" | "next"; index?: number };

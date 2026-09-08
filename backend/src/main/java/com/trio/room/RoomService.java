@@ -64,7 +64,10 @@ public class RoomService {
 
     public synchronized View command(String token, Command command) {
         Room room = find(token);
-        if (command.revision() == null || command.revision() != room.revision)
+        // Both players may confirm from the same finished-round snapshot.
+        boolean concurrentRematch = "next".equals(command.type()) && room.game != null
+                && room.game.awaitingRematch() && Objects.equals(command.revision(), room.revision - 1);
+        if (command.revision() == null || (command.revision() != room.revision && !concurrentRematch))
             throw error(HttpStatus.CONFLICT, "staleState");
         String mark = room.members.stream().filter(member -> member.token.equals(token))
                 .findFirst().orElseThrow().player.mark();
@@ -77,9 +80,8 @@ public class RoomService {
             if (room.game == null) throw error(HttpStatus.CONFLICT, "notStarted");
             room.game.move(mark, command.index());
         } else if ("next".equals(command.type())) {
-            requireHost(mark);
             if (room.game == null) throw error(HttpStatus.CONFLICT, "notStarted");
-            room.game.next();
+            if (!room.game.confirmRematch(mark)) return view(room);
         } else throw error(HttpStatus.BAD_REQUEST, "invalidAction");
         room.revision++;
         return view(room);

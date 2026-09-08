@@ -27,30 +27,34 @@ test("home, themes, and all locales persist across navigation and reload", async
   expect(errors).toEqual([]);
 });
 
-test("local win, rematch, draw, reset confirmation and player names", async ({
-  page,
-}) => {
+test("computer game supports both symbols, rematches and reset", async ({ page }) => {
   await page.goto("/play");
-  await page.getByLabel("Nome do jogador X").fill("Ana");
-  await expect(page.getByRole("status")).toContainText("Vez de Ana");
-  for (const i of [1, 4, 2, 5, 3])
-    await page.getByRole("button", { name: `Casa ${i}: vazia`, exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Ana venceu!");
-  await expect(page.getByTestId("score-X")).toHaveText("1");
-  await expect(page.getByRole("button", { name: "Casa 9: vazia" })).toBeDisabled();
+  await expect(page.getByRole("textbox")).toHaveCount(1);
+  await page.getByLabel("Seu apelido").fill("Ana");
+  for (const cell of [1, 2, 4]) {
+    await expect(page.getByRole("status")).toContainText("Sua vez, Ana");
+    await page
+      .getByRole("button", { name: "Casa " + cell + ": vazia", exact: true })
+      .click();
+  }
+  await expect(page.getByRole("status")).toContainText("Máquina venceu!");
+  await expect(page.getByTestId("score-O")).toHaveText("1");
   await page.getByRole("button", { name: "Jogar novamente" }).click();
-  await expect(page.getByRole("status")).toContainText("Vez de Jogador O");
-  for (const i of [1, 2, 3, 5, 4, 6, 8, 7, 9])
-    await page.getByRole("button", { name: `Casa ${i}: vazia`, exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Deu velha!");
-  await expect(page.getByTestId("score-draw")).toHaveText("1");
+  await expect(page.getByRole("status")).toContainText("Sua vez, Ana");
   await page.getByRole("button", { name: "Reiniciar sessão" }).click();
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
-  await expect(page.getByTestId("score-X")).toHaveText("1");
+  await expect(page.getByTestId("score-O")).toHaveText("1");
   await page.getByRole("button", { name: "Reiniciar sessão" }).click();
   await page.getByRole("button", { name: "Sim, reiniciar" }).click();
-  await expect(page.getByTestId("score-X")).toHaveText("0");
-  await expect(page.getByTestId("score-draw")).toHaveText("0");
+  await expect(page.getByTestId("score-O")).toHaveText("0");
+  await page.getByRole("button", { name: "O · Segundo" }).click();
+  await expect(
+    page.getByRole("button", { name: "Casa 5: X", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Casa 1: vazia", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Casa 1: O", exact: true }),
+  ).toBeVisible();
 });
 
 test("online validates inputs and honestly reports missing server", async ({ page }) => {

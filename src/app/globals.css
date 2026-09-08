@@ -14,6 +14,7 @@
   --lilac-soft: #2d263b;
   --button-text: #1b2510;
   --grid-line: #333c2c;
+  --danger: #f87171;
 }
 [data-theme="light"] {
   color-scheme: light;
@@ -28,6 +29,7 @@
   --lilac: #7960ac;
   --lilac-soft: #eee8f8;
   --grid-line: #d5dfca;
+  --danger: #b91c1c;
 }
 @theme inline {
   --color-background: var(--background);
@@ -38,6 +40,7 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-lilac: var(--lilac);
+  --color-danger: var(--danger);
   --font-sans: "Segoe UI", Arial, Helvetica, sans-serif;
   --font-mono: "Cascadia Code", Consolas, monospace;
 }
@@ -179,10 +182,15 @@ select {
   color: var(--button-text);
   border: 1px solid #c4f477;
 }
-.button-primary:hover {
+.button-primary:not(:disabled):hover {
   background: #d4ff93;
   transform: translateY(-2px);
   box-shadow: 0 5px 25px #b4e46a16;
+}
+.button-primary:disabled {
+  opacity: 0.5;
+  filter: saturate(0.35);
+  cursor: not-allowed;
 }
 .button-secondary {
   background: var(--surface);

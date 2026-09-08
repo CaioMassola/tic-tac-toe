@@ -9,7 +9,7 @@ export function PageIntro({
   t,
 }: TranslationProps & { label: string; title: string; subtitle: string }) {
   return (
-    <div className="pt-8 sm:pt-10 pb-8">
+    <div className="pt-3 sm:pt-4 pb-8">
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-muted text-xs hover:text-foreground mb-9"

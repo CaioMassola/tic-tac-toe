@@ -5,7 +5,7 @@ import type { TranslationProps } from "@/lib/translations";
 export function SiteFooter({ t }: TranslationProps) {
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8 py-7 flex flex-wrap items-center justify-between gap-5">
+      <div className="mx-auto max-w-[1200px] px-5 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-5">
           <Logo />
           <span className="text-xs text-muted max-w-48 sm:max-w-none">{t.footer}</span>

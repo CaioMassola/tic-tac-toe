@@ -19,7 +19,7 @@ The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `n
 ## Features
 
 - `/`: home page, introduction, and game mode selection.
-- `/play`: local two-player game with custom names, wins, draws, scores, the last five rounds, and rematches with alternating starting players.
+- `/play`: game against the computer with one player name, X/O selection, scores, and round history. X always starts, including rematches; changing symbols resets the session.
 - `/online`: create/join two-player rooms, host-controlled start, server-authoritative moves, wins/draws, scores, the last five rounds, and rematches with alternating starters. Both browsers receive updates through authenticated WebSocket/STOMP.
 - `/rules`: rules and winning examples.
 - Dark and light themes; Brazilian Portuguese, American English, and Spanish. Preferences are saved in the browser, with an in-memory fallback when storage is blocked.
@@ -37,7 +37,7 @@ cd "{path}/tic-tac-toe/backend"
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
-Run `npm run dev` from the project root in another terminal. Open `/online` in two browsers, create a room in the first, and enter its code in the second. Click **Iniciar partida** in the host's browser; the board appears in both. Play a round and use **Jogar novamente** as the host to start a rematch. A third player receives a room-full error.
+Run `npm run dev` from the project root in another terminal. Open `/online` in two browsers, create a room in the first, and enter its code in the second. Click **Iniciar partida** in the host's browser; the board appears in both. Play a round and have both players click **Jogar novamente** to start a rematch. A third player receives a room-full error.
 
 `NEXT_PUBLIC_BACKEND_URL` defaults to `http://localhost:8080`. See `.env.example`; rebuild the frontend after changing this variable. The backend accepts the local frontend origins by default; configure `TRIO_ALLOWED_ORIGINS` for other origins. Production requires a publicly reachable HTTPS/WSS backend; deployment is still pending.
 

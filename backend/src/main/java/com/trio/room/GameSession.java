@@ -8,13 +8,14 @@ import org.springframework.web.server.ResponseStatusException;
 final class GameSession {
     record Round(int round, String winner) {}
     record View(List<String> board, String turn, String winner, List<Integer> line,
-                int round, Map<String, Integer> scores, List<Round> history) {}
+                int round, Map<String, Integer> scores, List<Round> history, List<String> rematchReady) {}
     private static final int[][] LINES = {
         {0,1,2}, {3,4,5}, {6,7,8}, {0,3,6}, {1,4,7}, {2,5,8}, {0,4,8}, {2,4,6}
     };
     private final String[] board = new String[9];
     private final Map<String, Integer> scores = new HashMap<>(Map.of("X", 0, "O", 0, "draw", 0));
     private final List<Round> history = new ArrayList<>();
+    private final Set<String> rematchReady = new LinkedHashSet<>();
     private String starter = "X", turn = "X", winner;
     private List<Integer> line = List.of();
     private int round = 1;
@@ -40,6 +41,15 @@ final class GameSession {
         } else turn = mark.equals("X") ? "O" : "X";
     }
 
+    boolean awaitingRematch() { return !rematchReady.isEmpty(); }
+
+    boolean confirmRematch(String mark) {
+        if (winner == null) throw conflict("roundNotFinished");
+        if (!rematchReady.add(mark)) return false;
+        if (rematchReady.size() == 2) next();
+        return true;
+    }
+
     void next() {
         if (winner == null) throw conflict("roundNotFinished");
         Arrays.fill(board, null);
@@ -47,12 +57,13 @@ final class GameSession {
         turn = starter;
         winner = null;
         line = List.of();
+        rematchReady.clear();
         round++;
     }
 
     View view() {
         return new View(Collections.unmodifiableList(new ArrayList<>(Arrays.asList(board))), turn,
-                winner, line, round, Map.copyOf(scores), List.copyOf(history));
+                winner, line, round, Map.copyOf(scores), List.copyOf(history), List.copyOf(rematchReady));
     }
 
     private ResponseStatusException conflict(String code) {

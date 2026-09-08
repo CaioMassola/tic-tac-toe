@@ -20,6 +20,7 @@ const game: rooms.OnlineGameState = {
   round: 1,
   scores: { X: 0, O: 0, draw: 0 },
   history: [],
+  rematchReady: [],
 };
 const ready: rooms.Room = {
   code: "ABC123",
@@ -63,6 +64,81 @@ function mockConnection() {
 }
 
 describe("online match", () => {
+  it.each(["X", "O"] as const)(
+    "waits for both confirmations when %s requests a rematch",
+    async (mark) => {
+      const connection = mockConnection();
+      const finished: rooms.Room = {
+        ...playing,
+        status: "FINISHED",
+        revision: 8,
+        game: { ...game, winner: "draw" },
+      };
+      const confirmed: rooms.Room = {
+        ...finished,
+        revision: 9,
+        game: { ...finished.game!, rematchReady: [mark] },
+      };
+      const send = vi.spyOn(rooms, "sendRoomCommand").mockResolvedValue(confirmed);
+      render(
+        <RoomLobby
+          membership={{ ...membership, mark, room: finished }}
+          t={translations["pt-BR"]}
+        />,
+      );
+      connection.connected(true);
+      expect(
+        screen.getByRole("button", { name: translations["pt-BR"].next }),
+      ).toBeEnabled();
+      fireEvent.click(screen.getByRole("button", { name: translations["pt-BR"].next }));
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: translations["pt-BR"].rematchConfirmed }),
+        ).toBeDisabled(),
+      );
+      expect(screen.getByText(translations["pt-BR"].waitingRematch)).toBeVisible();
+      expect(screen.getByRole("status")).toHaveTextContent(translations["pt-BR"].draw);
+      expect(send).toHaveBeenCalledTimes(1);
+      connection.update({
+        ...playing,
+        revision: 10,
+        game: { ...game, round: 2, turn: "O" },
+      });
+      expect(
+        screen.queryByRole("button", { name: translations["pt-BR"].rematchConfirmed }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent("Beto");
+    },
+  );
+
+  it("invites the other player to confirm and preserves confirmations on reconnect", () => {
+    const connection = mockConnection();
+    const finished: rooms.Room = {
+      ...playing,
+      revision: 9,
+      status: "FINISHED",
+      game: { ...game, winner: "X", rematchReady: ["X"] },
+    };
+    render(
+      <RoomLobby
+        membership={{ ...membership, mark: "O", room: finished }}
+        t={translations["pt-BR"]}
+      />,
+    );
+    connection.connected(true);
+    expect(screen.getByText(translations["pt-BR"].opponentRematchReady)).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Ana quer jogar novamente" }),
+    ).toBeEnabled();
+    connection.connected(false);
+    expect(
+      screen.getByRole("button", { name: "Ana quer jogar novamente" }),
+    ).toBeDisabled();
+    connection.update(finished);
+    connection.connected(true);
+    expect(screen.getByText(translations["pt-BR"].opponentRematchReady)).toBeVisible();
+  });
+
   it("lets the host start, plays server moves and starts a rematch", async () => {
     const connection = mockConnection();
     const send = vi.spyOn(rooms, "sendRoomCommand").mockResolvedValue(playing);
@@ -100,7 +176,7 @@ describe("online match", () => {
         history: [{ round: 1, winner: "X" }],
       },
     });
-    expect(screen.getByRole("status")).toHaveTextContent("Ana venceu!");
+    expect(screen.getByRole("status")).toHaveTextContent("Você venceu!");
     expect(screen.getByTestId("score-X")).toHaveTextContent("1");
     send.mockResolvedValue({
       ...playing,
@@ -151,10 +227,8 @@ describe("online match", () => {
     await waitFor(() =>
       expect(screen.getByRole("status")).toHaveTextContent("Deu velha!"),
     );
-    expect(screen.getByText(translations["pt-BR"].waitingRematch)).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: "Jogar novamente" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText(translations["pt-BR"].rematchPrompt)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Jogar novamente" })).toBeEnabled();
     connection.connected(false);
     expect(screen.getByRole("alert")).toHaveTextContent("Conectando");
     connection.expire();

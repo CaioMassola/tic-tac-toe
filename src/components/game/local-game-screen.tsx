@@ -16,7 +16,10 @@ export function LocalGameScreen() {
   const t = useTranslation();
   const {
     state,
-    names,
+    name,
+    playerMark,
+    thinking,
+    setPlayerMark,
     setPlayerName,
     winner,
     line,
@@ -52,16 +55,25 @@ export function LocalGameScreen() {
             winner={winner}
             turn={state.turn}
             getPlayerName={getPlayerName}
+            turnLabel={
+              state.turn === playerMark
+                ? name.trim()
+                  ? `${t.yourTurn}, ${name.trim()}`
+                  : t.yourTurn
+                : undefined
+            }
           />
 
-          <GameBoard
-            t={t}
-            board={state.board}
-            turn={state.turn}
-            winner={winner}
-            winningLine={line}
-            onMove={playMove}
-          />
+          <fieldset disabled={thinking}>
+            <GameBoard
+              t={t}
+              board={state.board}
+              turn={state.turn}
+              winner={winner}
+              winningLine={line}
+              onMove={playMove}
+            />
+          </fieldset>
 
           <div className="flex justify-center mt-6 min-h-12">
             {winner ? (
@@ -72,7 +84,7 @@ export function LocalGameScreen() {
             ) : (
               <span className="text-muted text-xs flex items-center gap-2">
                 <Icon name="users" className="w-4 h-4" />
-                {t.local}
+                {thinking ? t.computerThinking : t.local}
               </span>
             )}
           </div>
@@ -90,7 +102,13 @@ export function LocalGameScreen() {
         <aside className="space-y-5">
           <Scoreboard t={t} scores={state.scores} getPlayerName={getPlayerName} />
 
-          <PlayerSettings t={t} names={names} onNameChange={setPlayerName} />
+          <PlayerSettings
+            t={t}
+            name={name}
+            playerMark={playerMark}
+            onNameChange={setPlayerName}
+            onMarkChange={setPlayerMark}
+          />
 
           <RoundHistory t={t} history={state.history} getPlayerName={getPlayerName} />
 
