@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import HomePage from "@/app/page";
 import PlayPage from "@/app/play/page";
 import OnlinePage from "@/app/online/page";
@@ -83,9 +83,7 @@ describe("local session", () => {
 
     async function play(moves: number[]) {
       for (const cell of moves) {
-        await user.click(
-          screen.getByRole("button", { name: `Casa ${cell}: vazia` }),
-        );
+        await user.click(screen.getByRole("button", { name: `Casa ${cell}: vazia` }));
       }
     }
 
@@ -139,13 +137,15 @@ describe("room form", () => {
     const button = screen.getByRole("button", { name: "Entrar em uma sala" });
     button.setAttribute("value", "invalid");
     fireEvent.click(button);
-    expect(
-      screen.getByRole("button", { name: "Criar sala" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Criar sala" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(screen.queryByLabelText("Código da sala")).not.toBeInTheDocument();
   });
 
   it("validates fields, clears errors on edits and never fabricates a room", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
     const user = userEvent.setup();
     render(<OnlinePage />);
     await user.click(screen.getByRole("button", { name: "Criar minha sala" }));

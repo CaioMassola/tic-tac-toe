@@ -1,6 +1,6 @@
 ﻿# trio — Tic-tac-toe
 
-A learning frontend built with Next.js (App Router), React, TypeScript, and Tailwind CSS. This standalone project lives in `{path}/tic-tac-toe`.
+A learning project built with Next.js (App Router), React, TypeScript, Tailwind CSS, and a Java/Spring Boot backend. This standalone project lives in `{path}/tic-tac-toe`.
 
 ## Getting started
 
@@ -20,12 +20,26 @@ The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `n
 
 - `/`: home page, introduction, and game mode selection.
 - `/play`: local two-player game with custom names, wins, draws, scores, the last five rounds, and rematches with alternating starting players.
-- `/online`: preview of the create/join room screens with nickname and room code validation.
+- `/online`: create/join two-player rooms, host-controlled start, server-authoritative moves, wins/draws, scores, the last five rounds, and rematches with alternating starters. Both browsers receive updates through authenticated WebSocket/STOMP.
 - `/rules`: rules and winning examples.
 - Dark and light themes; Brazilian Portuguese, American English, and Spanish. Preferences are saved in the browser, with an in-memory fallback when storage is blocked.
 - Responsive interface, keyboard-accessible controls, screen reader announcements for results, and support for reduced motion preferences.
 
-**Online mode does not connect players yet.** The forms report that the server is unavailable and do not simulate a created room. The next step is to implement Java/Spring Boot, a room API, and WebSocket/STOMP. The server will be authoritative for online moves.
+**Online matches are playable.** Start the backend to use rooms; see [backend setup and API](backend/README.md). The host (X) can start once the second player joins and can start a rematch after a win/draw. Only the player whose turn it is can move. The server checks player identity, game rules, and the room revision before changing state, preventing duplicate or delayed requests from affecting another turn or round.
+
+Rooms live in one backend process, expire 30 minutes after creation, and disappear when it restarts. Each member gets a private token and X/O assignment. Temporary WebSocket interruptions reconnect and request a fresh room snapshot. In this milestone, membership exists only while the online page remains open: refreshing or leaving loses access and does not free the occupied slot. Session recovery and explicit leaving are next-stage work. The lobby's player list represents membership, not live presence.
+
+To run both applications, build and start Java in one terminal (Java 21 or later, no separate Maven installation required):
+
+```powershell
+cd "{path}/tic-tac-toe/backend"
+.\mvnw.cmd verify
+java -jar target/backend-0.0.1-SNAPSHOT.jar
+```
+
+Run `npm run dev` from the project root in another terminal. Open `/online` in two browsers, create a room in the first, and enter its code in the second. Click **Iniciar partida** in the host's browser; the board appears in both. Play a round and use **Jogar novamente** as the host to start a rematch. A third player receives a room-full error.
+
+`NEXT_PUBLIC_BACKEND_URL` defaults to `http://localhost:8080`. See `.env.example`; rebuild the frontend after changing this variable. The backend accepts the local frontend origins by default; configure `TRIO_ALLOWED_ORIGINS` for other origins. Production requires a publicly reachable HTTPS/WSS backend; deployment is still pending.
 
 Scores and player names last while the game screen remains open. Leaving or refreshing starts a new session. Theme and language preferences persist.
 
@@ -38,20 +52,24 @@ src/
     layout/             Page structure, header, footer, and logo
     home/               Introduction and game mode cards
     game/               Board, status, scores, players, and history
-    online/             Room form and invitation instructions
+    online/             Room form, live lobby, online board and invitation instructions
     rules/              Rules and winning examples
     shared/             Page introduction and illustrative board
     icons.tsx           SVG icons and X/O symbols
   hooks/
     use-local-game.ts   Session state and game actions
     use-room-form.ts    Room form state, validation, and handlers
+    use-online-room.ts  Connection, versioned snapshots, and authenticated commands
     use-translation.ts  Access to the selected language dictionary
   lib/
     game.ts             Pure rules and local game reducer
     game.test.ts        Rules and translation tests
     preferences.ts      Theme and language persistence
+    rooms.ts            Room types, HTTP commands, and STOMP transport
     translations.ts     Typed pt-BR, en-US, and es dictionaries
 tests/app.spec.ts       Desktop and mobile browser flows
+tests/rooms.spec.ts     Real online matches, rematches, and reconnects
+backend/               Spring Boot room API, rules, and tests
 ```
 
 Start with `lib/game.ts` to understand the rules. Then explore `hooks/use-local-game.ts`, which connects the reducer to session actions. The `components/game/local-game-screen.tsx` screen composes components and passes data and events through props; each component has a defined responsibility.
@@ -83,7 +101,7 @@ npm run build
 
 Run `npm run format` to format the project. Prettier standardizes JSX, TypeScript, CSS, and configuration files with two-space indentation. ESLint requires blank lines between functions and before exports and returns. `.editorconfig` defines UTF-8, line endings, and indentation for compatible editors.
 
-For browser testing, run `npm run test:e2e`. Playwright automatically starts the development server or reuses a server already running on port 3000 outside CI.
+For browser testing, first run `backend/mvnw.cmd -f backend/pom.xml verify` (Windows) or `bash backend/mvnw -f backend/pom.xml verify` (Linux/macOS), then `npm run test:e2e`. Playwright automatically starts the frontend and the packaged Java backend, or reuses servers on ports 3000 and 8080 outside CI. Room tests use real HTTP and WebSocket connections across independent browser contexts; the server-unavailable scenario explicitly blocks requests.
 
 Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets, and all 255,168 possible complete games starting with X. Playwright checks languages, persistence, themes, gameplay, and forms at desktop and mobile sizes.
 
@@ -91,7 +109,7 @@ Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes to `main`, pull requests, and manual dispatches from the Actions tab. It uses Node.js 24 and installs dependencies from `package-lock.json` with `npm ci`.
 
-Checks run in order: lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, run `npm run build` first; outside CI, Playwright starts the development server.
+Checks run in order: Java 21 backend tests and packaging, lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build and Java backend. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, build both applications first; outside CI, Playwright starts the development server and the packaged backend.
 
 ### Vercel deployment
 

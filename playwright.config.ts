@@ -3,11 +3,19 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
-  webServer: {
-    command: process.env.CI ? "npm run start" : "npm run dev",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: process.env.CI ? "npm run start" : "npm run dev",
+      url: "http://127.0.0.1:3000",
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: "java -jar backend/target/backend-0.0.1-SNAPSHOT.jar",
+      url: "http://localhost:8080/api/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60000,
+    },
+  ],
   use: {
     baseURL: "http://127.0.0.1:3000",
     trace: "retain-on-failure",

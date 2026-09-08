@@ -3,6 +3,7 @@
 import { useRoomForm } from "@/hooks/use-room-form";
 import { Icon } from "@/components/icons";
 import type { TranslationProps } from "@/lib/translations";
+import { RoomLobby } from "./room-lobby";
 
 export function RoomForm({ t }: TranslationProps) {
   const {
@@ -10,11 +11,15 @@ export function RoomForm({ t }: TranslationProps) {
     nickname,
     code,
     error,
+    pending,
+    membership,
     handleModeChange,
     handleNicknameChange,
     handleCodeChange,
     handleSubmit,
   } = useRoomForm();
+
+  if (membership) return <RoomLobby membership={membership} t={t} />;
 
   return (
     <section className="panel p-6 sm:p-8">
@@ -25,6 +30,7 @@ export function RoomForm({ t }: TranslationProps) {
             aria-pressed={mode === value}
             className={mode === value ? "selected" : ""}
             value={value}
+            disabled={pending}
             onClick={handleModeChange}
           >
             {t[value]}
@@ -46,6 +52,7 @@ export function RoomForm({ t }: TranslationProps) {
           id="nickname"
           className="input"
           maxLength={20}
+          disabled={pending}
           value={nickname}
           onChange={handleNicknameChange}
           placeholder={t.nicknamePlaceholder}
@@ -62,6 +69,7 @@ export function RoomForm({ t }: TranslationProps) {
               id="room-code"
               className="input font-mono uppercase tracking-[3px]"
               maxLength={6}
+              disabled={pending}
               value={code}
               onChange={handleCodeChange}
               placeholder={t.codePlaceholder}
@@ -77,8 +85,13 @@ export function RoomForm({ t }: TranslationProps) {
             {t[error]}
           </p>
         )}
-        <button type="submit" className="button-primary w-full mt-6">
-          {mode === "create" ? t.createButton : t.joinButton}
+        <button
+          type="submit"
+          disabled={pending}
+          aria-busy={pending}
+          className="button-primary w-full mt-6"
+        >
+          {pending ? t.connecting : mode === "create" ? t.createButton : t.joinButton}
           <Icon name="arrow" />
         </button>
         <p className="text-center text-[11px] text-muted mt-4">{t.onlineNote}</p>

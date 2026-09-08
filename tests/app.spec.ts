@@ -54,6 +54,7 @@ test("local win, rematch, draw, reset confirmation and player names", async ({
 });
 
 test("online validates inputs and honestly reports missing server", async ({ page }) => {
+  await page.route("**/api/rooms**", (route) => route.abort());
   await page.goto("/online");
   await page.getByRole("button", { name: "Criar minha sala" }).click();
   await expect(page.locator("form").getByRole("alert")).toContainText(

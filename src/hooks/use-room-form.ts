@@ -1,15 +1,24 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent, type MouseEvent } from "react";
+import {
+  useState,
+  useRef,
+  type ChangeEvent,
+  type FormEvent,
+  type MouseEvent,
+} from "react";
+import { enterRoom, type Membership, type RoomError } from "@/lib/rooms";
 
 type RoomMode = "create" | "join";
-type RoomError = "invalidName" | "invalidCode" | "unavailable" | null;
 
 export function useRoomForm() {
   const [mode, setMode] = useState<RoomMode>("create");
   const [nickname, setNickname] = useState("");
   const [code, setCode] = useState("");
-  const [error, setError] = useState<RoomError>(null);
+  const [error, setError] = useState<RoomError | null>(null);
+  const [membership, setMembership] = useState<Membership | null>(null);
+  const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
 
   function handleModeChange(event: MouseEvent<HTMLButtonElement>) {
     const value = event.currentTarget.value;
@@ -30,10 +39,11 @@ export function useRoomForm() {
     setError(null);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
 
-    if (nickname.trim().length < 2) {
+    if (nickname.trim().length < 2 || nickname.trim().length > 20) {
       setError("invalidName");
 
       return;
@@ -45,7 +55,22 @@ export function useRoomForm() {
       return;
     }
 
-    setError("unavailable");
+    submitting.current = true;
+    setPending(true);
+    setError(null);
+    try {
+      setMembership(await enterRoom(mode, nickname, code));
+    } catch (cause) {
+      setError(
+        cause instanceof Error &&
+          (cause.message === "roomNotFound" || cause.message === "roomFull")
+          ? cause.message
+          : "unavailable",
+      );
+    } finally {
+      submitting.current = false;
+      setPending(false);
+    }
   }
 
   return {
@@ -53,6 +78,8 @@ export function useRoomForm() {
     nickname,
     code,
     error,
+    pending,
+    membership,
     handleModeChange,
     handleNicknameChange,
     handleCodeChange,
