@@ -1,6 +1,6 @@
 ﻿# trio — Tic-tac-toe
 
-A learning project built with Next.js (App Router), React, TypeScript, Tailwind CSS, and a Java/Spring Boot backend. This standalone project lives in `{path}/tic-tac-toe`.
+A learning project built with Next.js (App Router), React, TypeScript, Tailwind CSS, and a separately hosted Java/Spring Boot API. This repository contains only the frontend. The backend lives in [tic-tac-toe-backend](https://github.com/CaioMassola/tic-tac-toe-backend), locally at `{path}/tic-tac-toe-backend`.
 
 ## Getting started
 
@@ -9,6 +9,7 @@ Requirements: Node.js 24 and npm.
 ```powershell
 cd "{path}/tic-tac-toe"
 npm install
+Copy-Item .env.example .env
 npm run dev
 ```
 
@@ -22,7 +23,7 @@ For development, run these commands from the project root:
 | `npm run dev:front` | Only the frontend on port 3000                   |
 | `npm run dev:back`  | Only the backend on port 8080                    |
 
-`npm run dev` remains an alias for starting the frontend. The backend command uses the Maven Wrapper to compile and start Spring Boot from source; Java 21 or later is required. The first run may download Maven dependencies. With `dev:all`, Ctrl+C stops both services, and if either exits, the other is stopped too. Stop existing servers before running these commands on the same ports.
+`npm run dev` remains an alias for starting the frontend. Clone the backend repository alongside this repository first. The optional `dev:back` and `dev:all` commands use `../tic-tac-toe-backend`; set `BACKEND_DIR` in your shell for another checkout location. Running or building only the frontend does not require Java or a backend checkout. The backend command uses the Maven Wrapper to compile and start Spring Boot from source; Java 21 or later is required. The first run may download Maven dependencies. With `dev:all`, Ctrl+C stops both services, and if either exits, the other is stopped too. Stop existing servers before running these commands on the same ports.
 
 The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `next.config.ts`. In Next.js 16.3, other development hosts must be explicitly allowed: a blocked development connection can leave the page visible without enabling clicks. After changing this configuration, restart the server and reload the page.
 
@@ -36,7 +37,7 @@ The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `n
 - Dark and light themes; Brazilian Portuguese, American English, and Spanish. Preferences are saved in the browser, with an in-memory fallback when storage is blocked.
 - Responsive interface, keyboard-accessible controls, screen reader announcements for results, and support for reduced motion preferences.
 
-**Online matches are playable.** Start the backend to use rooms; see [backend setup and API](backend/README.md). The host (X) can start once the second player joins and can start a rematch after a win/draw. Only the player whose turn it is can move. The server checks player identity, game rules, and the room revision before changing state, preventing duplicate or delayed requests from affecting another turn or round.
+**Online matches are playable.** Start the backend to use rooms; see [backend setup and API](https://github.com/CaioMassola/tic-tac-toe-backend#readme). The host (X) can start once the second player joins and can start a rematch after a win/draw. Only the player whose turn it is can move. The server checks player identity, game rules, and the room revision before changing state, preventing duplicate or delayed requests from affecting another turn or round.
 
 Rooms live in one backend process, expire 30 minutes after creation, and disappear when it restarts. Each member gets a private token and X/O assignment. Temporary WebSocket interruptions reconnect and request a fresh room snapshot. In this milestone, membership exists only while the online page remains open: refreshing or leaving loses access and does not free the occupied slot. Session recovery and explicit leaving are next-stage work. The lobby's player list represents membership, not live presence.
 
@@ -45,14 +46,14 @@ Chat uses an independent authenticated channel and revision counter, so messages
 To run both applications, build and start Java in one terminal (Java 21 or later, no separate Maven installation required):
 
 ```powershell
-cd "{path}/tic-tac-toe/backend"
+cd "{path}/tic-tac-toe-backend"
 .\mvnw.cmd verify
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
 Run `npm run dev` from the project root in another terminal. Open `/online` in two browsers, create a room in the first, and enter its code in the second. Click **Iniciar partida** in the host's browser; the board appears in both. Play a round and have both players click **Jogar novamente** to start a rematch. A third player receives a room-full error.
 
-`NEXT_PUBLIC_BACKEND_URL` defaults to `http://localhost:8080`. See `.env.example`; rebuild the frontend after changing this variable. The backend accepts the local frontend origins by default; configure `TRIO_ALLOWED_ORIGINS` for other origins. Production requires a publicly reachable HTTPS/WSS backend; deployment is still pending.
+`NEXT_PUBLIC_BACKEND_URL` defaults to `http://localhost:8080`. See `.env.example`; rebuild the frontend after changing this variable. The backend accepts the local frontend origins by default; configure `TRIO_ALLOWED_ORIGINS` for other origins. For separate hosting, set `NEXT_PUBLIC_BACKEND_URL=https://your-java-host.example` in the frontend hosting environment before building (on Vercel, in Project Settings > Environment Variables). Set `TRIO_ALLOWED_ORIGINS=https://your-frontend.example` in the Java host, with no trailing slash; multiple origins are comma-separated. HTTP calls and WebSocket connections both use this URL, with HTTPS automatically becoming WSS. The Java host must support WebSockets. Redeploy the frontend after changing its URL.
 
 Scores and player names last while the game screen remains open. Leaving or refreshing starts a new session. Theme and language preferences persist.
 
@@ -82,7 +83,6 @@ src/
     translations.ts     Typed pt-BR, en-US, and es dictionaries
 tests/app.spec.ts       Desktop and mobile browser flows
 tests/rooms.spec.ts     Real online matches, rematches, and reconnects
-backend/               Spring Boot room API, rules, and tests
 ```
 
 Start with `lib/game.ts` to understand the rules. Then explore `hooks/use-local-game.ts`, which connects the reducer to session actions. The `components/game/local-game-screen.tsx` screen composes components and passes data and events through props; each component has a defined responsibility.
@@ -114,7 +114,7 @@ npm run build
 
 Run `npm run format` to format the project. Prettier standardizes JSX, TypeScript, CSS, and configuration files with two-space indentation. ESLint requires blank lines between functions and before exports and returns. `.editorconfig` defines UTF-8, line endings, and indentation for compatible editors.
 
-For browser testing, first run `backend/mvnw.cmd -f backend/pom.xml verify` (Windows) or `bash backend/mvnw -f backend/pom.xml verify` (Linux/macOS), then `npm run test:e2e`. Playwright automatically starts the frontend and the packaged Java backend, or reuses servers on ports 3000 and 8080 outside CI. Room tests use real HTTP and WebSocket connections across independent browser contexts; the server-unavailable scenario explicitly blocks requests.
+For browser testing, first run `mvnw.cmd verify` (Windows) or `bash mvnw verify` (Linux/macOS) in the separate backend repository, then `npm run test:e2e`. Playwright automatically starts the frontend and the packaged Java backend from `BACKEND_DIR` (default `../tic-tac-toe-backend`), or reuses servers on ports 3000 and 8080 outside CI. To use a deployed test backend, set `NEXT_PUBLIC_BACKEND_URL` to its URL and `E2E_EXTERNAL_BACKEND=1`; this skips starting Java locally. Use a dedicated test environment because these tests create rooms. Room tests use real HTTP and WebSocket connections across independent browser contexts; the server-unavailable scenario explicitly blocks requests.
 
 Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets, and all 255,168 possible complete games starting with X. Playwright checks languages, persistence, themes, gameplay, and forms at desktop and mobile sizes.
 
@@ -122,7 +122,7 @@ Unit tests cover winning lines, draws, invalid moves, scoring, rematches, resets
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs on pushes to `main`, pull requests, and manual dispatches from the Actions tab. It uses Node.js 24 and installs dependencies from `package-lock.json` with `npm ci`.
 
-Checks run in order: Java 21 backend tests and packaging, lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build and Java backend. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, build both applications first; outside CI, Playwright starts the development server and the packaged backend.
+CI checks out `CaioMassola/tic-tac-toe-backend` into the ignored `.e2e/backend` directory solely for integration testing. If that repository is private, configure `BACKEND_REPO_TOKEN` with read access to its contents. The Java repository also has its own independent test/package workflow. Checks run in order: Java 21 backend tests and packaging, lint, production build, unit and integration tests with the existing 100% coverage thresholds, then Playwright tests on desktop and mobile using Chromium against the production build and Java backend. A failed step stops the remaining checks. When running Playwright with `CI=true` locally, build both applications first; outside CI, Playwright starts the development server and the packaged backend.
 
 ### Vercel deployment
 

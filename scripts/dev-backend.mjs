@@ -6,7 +6,9 @@ const backend = spawn(
   windows ? "mvnw.cmd spring-boot:run" : "sh",
   windows ? [] : ["./mvnw", "spring-boot:run"],
   {
-    cwd: fileURLToPath(new URL("../backend/", import.meta.url)),
+    cwd:
+      process.env.BACKEND_DIR ||
+      fileURLToPath(new URL("../../tic-tac-toe-backend/", import.meta.url)),
     stdio: "inherit",
     shell: windows,
     windowsHide: true,

@@ -8,6 +8,4 @@ playwright-report/
 package-lock.json
 next-env.d.ts
 AGENTS.md
-backend/target/
-backend/mvnw
-backend/mvnw.cmd
+.e2e/

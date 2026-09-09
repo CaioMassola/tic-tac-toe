@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { backendUrl } from "../src/lib/rooms";
 
 test("two browsers share a real room and reject a third player", async ({
   page,
@@ -192,34 +193,37 @@ test("room codes do not grant access to private WebSocket events", async ({
   page,
   request,
 }) => {
-  const response = await request.post("http://localhost:8080/api/rooms", {
+  const response = await request.post(`${backendUrl()}/api/rooms`, {
     data: { nickname: "Ana" },
   });
   const membership = await response.json();
   await page.goto("/online");
-  const rejected = await page.evaluate(async (code: string) => {
-    return new Promise<string>((resolve) => {
-      const socket = new WebSocket("ws://localhost:8080/ws", ["v12.stomp"]);
-      const timeout = window.setTimeout(() => {
-        socket.close();
-        resolve("timeout");
-      }, 5000);
-      socket.onopen = () =>
-        socket.send(`CONNECT\naccept-version:1.2\nhost:localhost\ntoken:${code}\n\n\0`);
-      socket.onmessage = (event) => {
-        window.clearTimeout(timeout);
-        resolve(String(event.data));
-        socket.close();
-      };
-      socket.onclose = (event) => {
-        window.clearTimeout(timeout);
-        resolve(`closed:${event.code}`);
-      };
-      socket.onerror = () => {
-        window.clearTimeout(timeout);
-        resolve("socket-error");
-      };
-    });
-  }, membership.room.code);
+  const rejected = await page.evaluate(
+    async ({ code, url }) => {
+      return new Promise<string>((resolve) => {
+        const socket = new WebSocket(`${url.replace(/^http/, "ws")}/ws`, ["v12.stomp"]);
+        const timeout = window.setTimeout(() => {
+          socket.close();
+          resolve("timeout");
+        }, 5000);
+        socket.onopen = () =>
+          socket.send(`CONNECT\naccept-version:1.2\nhost:localhost\ntoken:${code}\n\n\0`);
+        socket.onmessage = (event) => {
+          window.clearTimeout(timeout);
+          resolve(String(event.data));
+          socket.close();
+        };
+        socket.onclose = (event) => {
+          window.clearTimeout(timeout);
+          resolve(`closed:${event.code}`);
+        };
+        socket.onerror = () => {
+          window.clearTimeout(timeout);
+          resolve("socket-error");
+        };
+      });
+    },
+    { code: membership.room.code as string, url: backendUrl() },
+  );
   expect(rejected).toMatch(/^ERROR/);
 });
