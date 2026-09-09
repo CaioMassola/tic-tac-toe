@@ -139,6 +139,76 @@ describe("online match", () => {
     expect(screen.getByText(translations["pt-BR"].opponentRematchReady)).toBeVisible();
   });
 
+  it("shows O's rematch invitation to X and confirms it", async () => {
+    const connection = mockConnection();
+    const finished: rooms.Room = {
+      ...playing,
+      revision: 9,
+      status: "FINISHED",
+      game: { ...game, winner: "draw", rematchReady: ["O"] },
+    };
+    const send = vi.spyOn(rooms, "sendRoomCommand").mockResolvedValue({
+      ...playing,
+      revision: 10,
+      game: { ...game, round: 2 },
+    });
+    render(
+      <RoomLobby
+        membership={{ ...membership, room: finished }}
+        t={translations["pt-BR"]}
+      />,
+    );
+    connection.connected(true);
+    const invitation = screen.getByRole("button", {
+      name: "Beto quer jogar novamente",
+    });
+    expect(invitation).toBeEnabled();
+    expect(screen.getByText(translations["pt-BR"].opponentRematchReady)).toBeVisible();
+    fireEvent.click(invitation);
+    await waitFor(() => expect(invitation).not.toBeInTheDocument());
+    expect(send).toHaveBeenCalledExactlyOnceWith("private", 9, { type: "next" });
+    expect(screen.getByText("Sua vez! Escolha uma casa vazia.")).toBeVisible();
+  });
+
+  it("lets the losing player request a rematch and wait for the opponent", async () => {
+    const connection = mockConnection();
+    const finished: rooms.Room = {
+      ...playing,
+      revision: 8,
+      status: "FINISHED",
+      game: {
+        ...game,
+        board: ["X", "X", "X", "O", "O", null, null, null, null],
+        winner: "X",
+        line: [0, 1, 2],
+      },
+    };
+    const send = vi.spyOn(rooms, "sendRoomCommand").mockResolvedValue({
+      ...finished,
+      revision: 9,
+      game: { ...finished.game!, rematchReady: ["O"] },
+    });
+    render(
+      <RoomLobby
+        membership={{ ...membership, mark: "O", room: finished }}
+        t={translations["pt-BR"]}
+      />,
+    );
+    connection.connected(true);
+    const request = screen.getByRole("button", { name: "Pedir revanche" });
+    expect(request).toBeEnabled();
+    expect(screen.getByText(translations["pt-BR"].rematchPrompt)).toBeVisible();
+    fireEvent.click(request);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: translations["pt-BR"].rematchConfirmed }),
+      ).toBeDisabled(),
+    );
+    expect(send).toHaveBeenCalledExactlyOnceWith("private", 8, { type: "next" });
+    expect(screen.getByText(translations["pt-BR"].waitingRematch)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Casa 1: X" })).toBeDisabled();
+  });
+
   it("lets the host start, plays server moves and starts a rematch", async () => {
     const connection = mockConnection();
     const send = vi.spyOn(rooms, "sendRoomCommand").mockResolvedValue(playing);
