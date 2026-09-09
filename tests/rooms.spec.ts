@@ -3,14 +3,14 @@ import { test, expect } from "@playwright/test";
 test("two browsers share a real room and reject a third player", async ({
   page,
   browser,
-}) => {
+}, testInfo) => {
   test.setTimeout(60000);
   const guestContext = await browser.newContext();
   const thirdContext = await browser.newContext();
-  let disconnect!: () => void;
+  const disconnects: (() => void)[] = [];
   await guestContext.routeWebSocket("**/ws", (socket) => {
     socket.connectToServer();
-    disconnect = () => socket.close();
+    disconnects.push(() => socket.close());
   });
   const guest = await guestContext.newPage();
   const third = await thirdContext.newPage();
@@ -35,13 +35,35 @@ test("two browsers share a real room and reject a third player", async ({
         "Os dois jogadores estão na sala!",
       );
       await expect(participant.getByRole("listitem")).toHaveText(["X — Ana", "O — Beto"]);
-      await expect(participant.getByTestId("room-code")).toHaveText(code);
+      await expect(participant.getByTestId("room-code")).toHaveCount(0);
+      await expect(
+        participant.getByRole("button", { name: "Copiar código" }),
+      ).toHaveCount(0);
     }
     await expect(page.getByText("Seu símbolo: X")).toBeVisible();
     await expect(guest.getByText("Seu símbolo: O")).toBeVisible();
     await expect(
       guest.getByRole("button", { name: "Iniciar partida", exact: true }),
     ).toHaveCount(0);
+
+    // Chat is available before starting and shares messages without changing the game.
+    await expect(page.getByLabel("Mensagem", { exact: true })).toBeEnabled();
+    await guest.getByLabel("Mensagem", { exact: true }).fill("Boa sorte, Ana!");
+    await expect(page.getByText("Beto está digitando…")).toBeVisible();
+    await guest.getByRole("button", { name: "Enviar mensagem", exact: true }).click();
+    await expect(page.getByRole("log").getByText("Boa sorte, Ana!")).toBeVisible();
+    await expect(page.getByText("Beto está digitando…")).toHaveCount(0);
+    await page.getByLabel("Mensagem", { exact: true }).fill("Boa sorte, Beto!");
+    await page.getByLabel("Mensagem", { exact: true }).press("Enter");
+    await expect(guest.getByRole("log").getByText("Boa sorte, Beto!")).toBeVisible();
+    await page.getByRole("button", { name: "Recolher chat" }).click();
+    await expect(page.getByRole("log")).toHaveCount(0);
+    await guest.getByLabel("Mensagem", { exact: true }).fill("Vamos jogar?");
+    await guest.getByRole("button", { name: "Enviar mensagem", exact: true }).click();
+    await expect(page.getByLabel("1 novas mensagens")).toBeVisible();
+    await page.getByRole("button", { name: "Expandir chat" }).click();
+    await expect(page.getByRole("log").getByText("Vamos jogar?")).toBeVisible();
+    await expect(page.getByLabel("1 novas mensagens")).toHaveCount(0);
 
     await third.goto("http://127.0.0.1:3000/online");
     await third.getByRole("button", { name: "Entrar em uma sala", exact: true }).click();
@@ -54,7 +76,7 @@ test("two browsers share a real room and reject a third player", async ({
 
     // A connection interruption keeps the membership and re-fetches the snapshot.
     await guestContext.setOffline(true);
-    disconnect();
+    disconnects.forEach((disconnect) => disconnect());
     await expect(guest.getByRole("status")).toContainText("Conectando", {
       timeout: 15000,
     });
@@ -65,6 +87,20 @@ test("two browsers share a real room and reject a third player", async ({
     );
 
     await page.getByRole("button", { name: "Iniciar partida", exact: true }).click();
+    await expect(guest.getByRole("log").getByText("Boa sorte, Ana!")).toBeVisible();
+    const chatBounds = await page
+      .getByRole("complementary", { name: "Chat da sala" })
+      .boundingBox();
+    const gameBounds = await page
+      .getByRole("region", { name: "Sala de espera" })
+      .boundingBox();
+    if (testInfo.project.name === "desktop")
+      expect(chatBounds!.x).toBeGreaterThan(gameBounds!.x + gameBounds!.width);
+    else expect(chatBounds!.y).toBeGreaterThan(gameBounds!.y);
+    await page.screenshot({
+      path: testInfo.outputPath("online-chat.png"),
+      fullPage: true,
+    });
     for (const participant of [page, guest]) {
       await expect(
         participant.getByRole("heading", { name: "Partida online", exact: true }),

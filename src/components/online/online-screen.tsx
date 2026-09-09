@@ -20,7 +20,7 @@ export function OnlineScreen() {
         </Link>
         <h1 className="eyebrow">{t.onlineLabel}</h1>
       </div>
-      <div className="w-full max-w-2xl mx-auto">
+      <div className="w-full mx-auto">
         <RoomForm t={t} />
       </div>
     </>

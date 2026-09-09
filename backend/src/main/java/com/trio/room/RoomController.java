@@ -36,6 +36,25 @@ public class RoomController {
     @MessageMapping("/room")
     public void snapshot(Principal principal) { send(principal.getName()); }
 
+    @MessageMapping("/chat")
+    public void chatSnapshot(Principal principal) {
+        synchronized (rooms) {
+            messaging.convertAndSendToUser(principal.getName(), "/queue/chat", rooms.chat(principal.getName()));
+        }
+    }
+
+    @PostMapping("/chat")
+    public ChatSession.View chat(@RequestHeader(value = "Authorization", defaultValue = "") String authorization,
+                                 @RequestBody ChatSession.Command command) {
+        String token = authorization.startsWith("Bearer ") ? authorization.substring(7) : "";
+        synchronized (rooms) {
+            var view = rooms.chatCommand(token, command);
+            for (String recipient : rooms.tokens(token))
+                messaging.convertAndSendToUser(recipient, "/queue/chat", view);
+            return view;
+        }
+    }
+
     @PostMapping("/actions")
     public RoomService.View command(@RequestHeader(value = "Authorization", defaultValue = "") String authorization,
                                     @RequestBody RoomService.Command command) {

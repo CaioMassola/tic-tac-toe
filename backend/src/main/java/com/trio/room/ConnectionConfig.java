@@ -70,8 +70,11 @@ public class ConnectionConfig implements WebSocketMessageBrokerConfigurer {
                 if (headers.getCommand() == StompCommand.SUBSCRIBE || headers.getCommand() == StompCommand.SEND) {
                     if (headers.getUser() == null) throw new IllegalArgumentException("Unauthorized");
                     rooms.view(headers.getUser().getName());
-                    String allowed = headers.getCommand() == StompCommand.SUBSCRIBE ? "/user/queue/room" : "/app/room";
-                    if (!allowed.equals(headers.getDestination())) throw new IllegalArgumentException("Forbidden destination");
+                    var allowed = headers.getCommand() == StompCommand.SUBSCRIBE
+                            ? java.util.Set.of("/user/queue/room", "/user/queue/chat")
+                            : java.util.Set.of("/app/room", "/app/chat");
+                    if (headers.getDestination() == null || !allowed.contains(headers.getDestination()))
+                        throw new IllegalArgumentException("Forbidden destination");
                 }
                 return message;
             }

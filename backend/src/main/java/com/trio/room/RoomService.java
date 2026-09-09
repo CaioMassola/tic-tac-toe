@@ -23,6 +23,7 @@ public class RoomService {
         final Instant expiresAt;
         long revision;
         GameSession game;
+        final ChatSession chat = new ChatSession();
 
         Room(String code, Instant expiresAt) { this.code = code; this.expiresAt = expiresAt; }
     }
@@ -61,6 +62,23 @@ public class RoomService {
     }
 
     public synchronized View view(String token) { return view(find(token)); }
+
+    public synchronized ChatSession.View chat(String token) {
+        return chatRoom(token).chat.view(clock.instant());
+    }
+
+    public synchronized ChatSession.View chatCommand(String token, ChatSession.Command command) {
+        Room room = chatRoom(token);
+        String mark = room.members.stream().filter(member -> member.token.equals(token))
+                .findFirst().orElseThrow().player.mark();
+        return room.chat.command(mark, command, clock.instant());
+    }
+
+    private Room chatRoom(String token) {
+        Room room = find(token);
+        if (room.members.size() != 2) throw error(HttpStatus.CONFLICT, "waitingPlayer");
+        return room;
+    }
 
     public synchronized View command(String token, Command command) {
         Room room = find(token);

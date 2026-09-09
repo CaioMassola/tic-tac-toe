@@ -10,6 +10,7 @@ export type IconName =
   | "screen"
   | "spark"
   | "check"
+  | "copy"
   | "refresh"
   | "info"
   | "trophy"
@@ -52,6 +53,12 @@ export function Icon({ name, className = "" }: { name: IconName; className?: str
     ),
     spark: <path d="m12 2 2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8L12 2Z" />,
     check: <path d="m5 12 4 4L19 6" />,
+    copy: (
+      <>
+        <rect x="8" y="8" width="12" height="12" rx="2" />
+        <path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" />
+      </>
+    ),
     refresh: (
       <>
         <path d="M20 7v5h-5M4 17v-5h5" />

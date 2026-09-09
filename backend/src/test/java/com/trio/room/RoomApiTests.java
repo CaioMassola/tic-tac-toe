@@ -16,6 +16,29 @@ class RoomApiTests {
     @Autowired RoomService rooms;
 
     @Test
+    void authenticatesChatValidatesMessagesAndKeepsTheSenderAuthoritative() throws Exception {
+        var host = rooms.create("Ana");
+        mvc.perform(post("/api/rooms/chat").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\":\"one\",\"text\":\"Hi\"}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/rooms/chat").header("Authorization", "Bearer " + host.token())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"one\",\"text\":\"Hi\"}"))
+                .andExpect(status().isConflict());
+        rooms.join(host.room().code(), "Beto");
+        mvc.perform(post("/api/rooms/chat").header("Authorization", "Bearer " + host.token())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"one\",\"text\":\"Hi\",\"mark\":\"O\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("messages[0].mark").value("X"))
+                .andExpect(jsonPath("messages[0].text").value("Hi"))
+                .andExpect(jsonPath("messages[0].sentAt").isString());
+        mvc.perform(post("/api/rooms/chat").header("Authorization", "Bearer " + host.token())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"id\":\"two\",\"text\":\" \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/rooms/chat").header("Authorization", "Bearer " + host.token())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"typing\":true}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("typing.X").isString());
+    }
+
+    @Test
     void createsAndJoinsWithStableErrors() throws Exception {
         mvc.perform(post("/api/rooms").contentType(MediaType.APPLICATION_JSON).content("{\"nickname\":\"Ana\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("mark").value("X"))

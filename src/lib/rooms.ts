@@ -20,6 +20,28 @@ export type Room = {
 
 export type Membership = { token: string; mark: "X" | "O"; room: Room };
 
+export type Chat = {
+  revision: number;
+  messages: { id: string; mark: Mark; text: string; sentAt: string }[];
+  typing: Partial<Record<Mark, string>>;
+};
+
+export async function sendChatCommand(
+  token: string,
+  command: { id: string; text: string } | { typing: boolean },
+): Promise<Chat> {
+  const response = await fetch(`${backendUrl()}/api/rooms/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(command),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok)
+    throw new Error(response.status === 401 ? "sessionExpired" : "chatFailed");
+
+  return response.json();
+}
+
 export type RoomError =
   "invalidName" | "invalidCode" | "unavailable" | "roomNotFound" | "roomFull";
 
@@ -80,17 +102,36 @@ export function watchRoom(
   onConnection: (connected: boolean) => void,
   onExpired: () => void,
 ) {
+  return watchChannel("room", token, onRoom, onConnection, onExpired);
+}
+
+export function watchChat(
+  token: string,
+  onChat: (chat: Chat) => void,
+  onConnection: (connected: boolean) => void,
+  onExpired: () => void,
+) {
+  return watchChannel("chat", token, onChat, onConnection, onExpired);
+}
+
+function watchChannel<T>(
+  channel: "room" | "chat",
+  token: string,
+  onSnapshot: (snapshot: T) => void,
+  onConnection: (connected: boolean) => void,
+  onExpired: () => void,
+) {
   const client = new Client({
     brokerURL: `${backendUrl().replace(/^http/, "ws")}/ws`,
     connectHeaders: { token },
     reconnectDelay: 2000,
     connectionTimeout: 8000,
     onConnect() {
-      client.subscribe("/user/queue/room", (message) => {
-        onRoom(JSON.parse(message.body));
+      client.subscribe(`/user/queue/${channel}`, (message) => {
+        onSnapshot(JSON.parse(message.body));
         onConnection(true);
       });
-      client.publish({ destination: "/app/room", body: "" });
+      client.publish({ destination: `/app/${channel}`, body: "" });
     },
     onWebSocketClose() {
       onConnection(false);

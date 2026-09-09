@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:front": "next dev",
+    "dev:back": "node scripts/dev-backend.mjs",
+    "dev:all": "concurrently --kill-others --names front,back --prefix-colors cyan,magenta \"npm run dev:front\" \"npm run dev:back\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -31,6 +34,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.0",
+    "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "jsdom": "^30.0.1",

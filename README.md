@@ -14,6 +14,16 @@ npm run dev
 
 Open http://localhost:3000. To run a local production build, use `npm run build` followed by `npm start`.
 
+For development, run these commands from the project root:
+
+| Command             | Starts                                           |
+| ------------------- | ------------------------------------------------ |
+| `npm run dev:all`   | Frontend and backend together, with labeled logs |
+| `npm run dev:front` | Only the frontend on port 3000                   |
+| `npm run dev:back`  | Only the backend on port 8080                    |
+
+`npm run dev` remains an alias for starting the frontend. The backend command uses the Maven Wrapper to compile and start Spring Boot from source; Java 21 or later is required. The first run may download Maven dependencies. With `dev:all`, Ctrl+C stops both services, and if either exits, the other is stopped too. Stop existing servers before running these commands on the same ports.
+
 The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `next.config.ts`. In Next.js 16.3, other development hosts must be explicitly allowed: a blocked development connection can leave the page visible without enabling clicks. After changing this configuration, restart the server and reload the page.
 
 ## Features
@@ -21,6 +31,7 @@ The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `n
 - `/`: home page, introduction, and game mode selection.
 - `/play`: game against the computer with one player name, X/O selection, scores, and round history. X always starts, including rematches; changing symbols resets the session.
 - `/online`: create/join two-player rooms, host-controlled start, server-authoritative moves, wins/draws, scores, the last five rounds, and rematches with alternating starters. Both browsers receive updates through authenticated WebSocket/STOMP.
+- Room chat becomes available when both players join, before the match starts. It sits on the right on desktop and below the game on mobile, with fixed X/O avatars, timestamps, typing indicators, and a collapsible panel with unread-message counts.
 - `/rules`: rules and winning examples.
 - Dark and light themes; Brazilian Portuguese, American English, and Spanish. Preferences are saved in the browser, with an in-memory fallback when storage is blocked.
 - Responsive interface, keyboard-accessible controls, screen reader announcements for results, and support for reduced motion preferences.
@@ -28,6 +39,8 @@ The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `n
 **Online matches are playable.** Start the backend to use rooms; see [backend setup and API](backend/README.md). The host (X) can start once the second player joins and can start a rematch after a win/draw. Only the player whose turn it is can move. The server checks player identity, game rules, and the room revision before changing state, preventing duplicate or delayed requests from affecting another turn or round.
 
 Rooms live in one backend process, expire 30 minutes after creation, and disappear when it restarts. Each member gets a private token and X/O assignment. Temporary WebSocket interruptions reconnect and request a fresh room snapshot. In this milestone, membership exists only while the online page remains open: refreshing or leaving loses access and does not free the occupied slot. Session recovery and explicit leaving are next-stage work. The lobby's player list represents membership, not live presence.
+
+Chat uses an independent authenticated channel and revision counter, so messages and typing do not invalidate game moves. The server keeps the latest 100 messages per room, limits messages to 500 characters and one per player every 300 ms, and assigns the sender from the private token. Retrying the same message ID does not duplicate it while it remains in the history. Typing notifications expire after four seconds. Reconnecting restores the chat history; failed sends retain the draft for retry. Messages disappear with the room.
 
 To run both applications, build and start Java in one terminal (Java 21 or later, no separate Maven installation required):
 

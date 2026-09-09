@@ -6,12 +6,17 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import * as rooms from "@/lib/rooms";
 import { RoomForm } from "./room-form";
 import { RoomLobby } from "./room-lobby";
 import { useRoomForm } from "@/hooks/use-room-form";
 import { translations as dictionaries } from "@/lib/translations";
+
+beforeEach(() => {
+  vi.spyOn(rooms, "watchChat").mockReturnValue(vi.fn());
+});
 
 const membership: rooms.Membership = {
   token: "private",
@@ -27,6 +32,21 @@ const membership: rooms.Membership = {
 };
 
 describe("room creation and lobby", () => {
+  it("copies the room code and confirms success, then reports a clipboard failure", async () => {
+    vi.spyOn(rooms, "watchRoom").mockReturnValue(vi.fn());
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    const t = dictionaries["pt-BR"];
+    render(<RoomLobby membership={membership} t={t} />);
+    await user.click(screen.getByRole("button", { name: t.copyCode }));
+    expect(writeText).toHaveBeenCalledWith("ABC123");
+    await screen.findByRole("button", { name: t.codeCopied });
+    writeText.mockRejectedValueOnce(new Error("Clipboard permission denied"));
+    await user.click(screen.getByRole("button", { name: t.codeCopied }));
+    expect(await screen.findByText(t.copyCodeError)).toBeVisible();
+    expect(screen.getByRole("button", { name: t.copyCode })).toBeEnabled();
+  });
+
   it("disables the form during requests, then shows the actual room", async () => {
     let resolve!: (value: rooms.Membership) => void;
     vi.spyOn(rooms, "enterRoom").mockImplementation(
@@ -121,7 +141,7 @@ describe("room creation and lobby", () => {
       }),
     );
     expect(screen.getByRole("status")).toHaveTextContent("Os dois jogadores");
-    expect(screen.getByText(/Beto/)).toBeVisible();
+    expect(screen.getByText(/Beto/, { selector: "li" })).toBeVisible();
     act(() => connection(false));
     expect(screen.getByRole("status")).toHaveTextContent("Conectando");
     act(() => expired());

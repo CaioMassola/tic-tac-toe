@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { backendUrl, enterRoom, watchRoom, sendRoomCommand } from "./rooms";
+import {
+  backendUrl,
+  enterRoom,
+  watchRoom,
+  watchChat,
+  sendChatCommand,
+  sendRoomCommand,
+} from "./rooms";
 import type { StompConfig } from "@stomp/stompjs";
 
 const stomp = vi.hoisted(() => ({
@@ -26,6 +33,41 @@ afterEach(() => {
 });
 
 describe("room transport", () => {
+  it("authenticates chat messages and subscribes to its separate channel", async () => {
+    const snapshot = { revision: 1, messages: [], typing: {} };
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue({ ok: true, json: async () => snapshot } as Response);
+    expect(await sendChatCommand("private", { id: "id", text: "Hi" })).toEqual(snapshot);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/rooms/chat"),
+      expect.objectContaining({
+        headers: { "Content-Type": "application/json", Authorization: "Bearer private" },
+        body: '{"id":"id","text":"Hi"}',
+      }),
+    );
+    const update = vi.fn();
+    const stop = watchChat("private", update, vi.fn(), vi.fn());
+    stomp.config.onConnect!({} as never);
+    expect(stomp.subscribe).toHaveBeenLastCalledWith(
+      "/user/queue/chat",
+      expect.any(Function),
+    );
+    expect(stomp.publish).toHaveBeenLastCalledWith({
+      destination: "/app/chat",
+      body: "",
+    });
+    stomp.subscribe.mock.lastCall![1]({ body: JSON.stringify(snapshot) });
+    expect(update).toHaveBeenCalledWith(snapshot);
+    stop();
+  });
+
+  it.each([401, 400, 429, 500])("reports chat HTTP error %s", async (status) => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: false, status } as Response);
+    await expect(sendChatCommand("private", { typing: true })).rejects.toThrow(
+      status === 401 ? "sessionExpired" : "chatFailed",
+    );
+  });
   it("sends authenticated commands with the snapshot revision", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")

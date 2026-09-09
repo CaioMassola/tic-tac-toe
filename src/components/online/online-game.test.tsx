@@ -6,11 +6,15 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as rooms from "@/lib/rooms";
 import { translations } from "@/lib/translations";
 import { useOnlineRoom } from "@/hooks/use-online-room";
 import { RoomLobby } from "./room-lobby";
+
+beforeEach(() => {
+  vi.spyOn(rooms, "watchChat").mockReturnValue(vi.fn());
+});
 
 const game: rooms.OnlineGameState = {
   board: Array(9).fill(null),

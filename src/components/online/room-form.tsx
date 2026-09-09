@@ -23,7 +23,7 @@ export function RoomForm({ t }: TranslationProps) {
   if (membership) return <RoomLobby membership={membership} t={t} />;
 
   return (
-    <>
+    <div className="max-w-2xl mx-auto">
       <ConnectionNotice t={t} />
       <section className="panel p-6 sm:p-8">
         <div className="segmented grid grid-cols-2 gap-1 p-1 mb-8">
@@ -97,6 +97,6 @@ export function RoomForm({ t }: TranslationProps) {
           <p className="text-center text-[11px] text-muted mt-4">{t.onlineNote}</p>
         </form>
       </section>
-    </>
+    </div>
   );
 }
