@@ -15,15 +15,7 @@ npm run dev
 
 Open http://localhost:3000. To run a local production build, use `npm run build` followed by `npm start`.
 
-For development, run these commands from the project root:
-
-| Command             | Starts                                           |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev:all`   | Frontend and backend together, with labeled logs |
-| `npm run dev:front` | Only the frontend on port 3000                   |
-| `npm run dev:back`  | Only the backend on port 8080                    |
-
-`npm run dev` remains an alias for starting the frontend. Clone the backend repository alongside this repository first. The optional `dev:back` and `dev:all` commands use `../tic-tac-toe-backend`; set `BACKEND_DIR` in your shell for another checkout location. Running or building only the frontend does not require Java or a backend checkout. The backend command uses the Maven Wrapper to compile and start Spring Boot from source; Java 21 or later is required. The first run may download Maven dependencies. With `dev:all`, Ctrl+C stops both services, and if either exits, the other is stopped too. Stop existing servers before running these commands on the same ports.
+Use `npm run dev` to start the frontend. Start Java separately from the `tic-tac-toe-backend` repository, following its README. Running or building the frontend does not require Java or a backend checkout.
 
 The address http://127.0.0.1:3000 is also permitted by `allowedDevOrigins` in `next.config.ts`. In Next.js 16.3, other development hosts must be explicitly allowed: a blocked development connection can leave the page visible without enabling clicks. After changing this configuration, restart the server and reload the page.
 
