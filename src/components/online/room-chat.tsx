@@ -5,6 +5,7 @@ import { Symbol, Icon } from "@/components/icons";
 import { useRoomChat } from "@/hooks/use-room-chat";
 import type { Membership, Room } from "@/lib/rooms";
 import type { TranslationProps } from "@/lib/translations";
+import { playSound } from "@/lib/sounds";
 
 export function RoomChat({
   membership,
@@ -20,6 +21,21 @@ export function RoomChat({
     membership.token,
   );
   const [draft, setDraft] = useState("");
+  const previousChat = useRef(chat);
+  useEffect(() => {
+    const before = previousChat.current;
+    previousChat.current = chat;
+    if (before.revision < 0) return;
+    if (
+      chat.messages.some(
+        (message) =>
+          message.mark !== membership.mark &&
+          !before.messages.some((old) => old.id === message.id),
+      )
+    ) {
+      playSound("message");
+    }
+  }, [chat, membership.mark]);
   const [collapsed, setCollapsed] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
   const unread = collapsed

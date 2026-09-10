@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { playSound } from "@/lib/sounds";
 import {
   sendRoomCommand,
   watchRoom,
@@ -16,6 +17,13 @@ export function useOnlineRoom(membership: Membership) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<"actionFailed" | "actionRejected" | null>(null);
   const sending = useRef(false);
+  const previousRoom = useRef(room);
+  useEffect(() => {
+    const before = previousRoom.current;
+    previousRoom.current = room;
+    if (room.players.length > before.players.length) playSound("join");
+    if (!before.game && room.game?.turn === membership.mark) playSound("turn");
+  }, [room, membership.mark]);
   const updateRoom = useCallback((snapshot: Room) => {
     setRoom((current) => (snapshot.revision >= current.revision ? snapshot : current));
   }, []);

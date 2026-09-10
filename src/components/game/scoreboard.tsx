@@ -5,11 +5,17 @@ import type { TranslationProps } from "@/lib/translations";
 type ScoreboardProps = TranslationProps & {
   scores: GameState["scores"];
   getPlayerName: (mark: Mark) => string;
+  compact?: boolean;
 };
 
-export function Scoreboard({ t, scores, getPlayerName }: ScoreboardProps) {
+export function Scoreboard({
+  t,
+  scores,
+  getPlayerName,
+  compact = false,
+}: ScoreboardProps) {
   return (
-    <section className="panel p-6">
+    <section className={compact ? "panel scoreboard-compact" : "panel p-6"}>
       <h2 className="eyebrow text-muted mb-5">{t.scoreboard}</h2>
       <div className="grid grid-cols-3 gap-2 text-center">
         {(["X", "draw", "O"] as const).map((mark) => (

@@ -90,7 +90,7 @@ test("all screens fit the viewport in all languages and themes", async ({
       await page.locator("select").selectOption(locale);
       for (const theme of ["dark", "light"]) {
         if ((await page.locator("html").getAttribute("data-theme")) !== theme)
-          await page.locator("header button").click();
+          await page.getByTestId("theme-toggle").click();
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -101,13 +101,13 @@ test("all screens fit the viewport in all languages and themes", async ({
   }
   await page.goto("/");
   await page.locator("select").selectOption("pt-BR");
-  await page.locator("header button").click();
+  await page.getByTestId("theme-toggle").click();
   await page.screenshot({
     path: `test-results/home-${testInfo.project.name}-dark.png`,
     fullPage: true,
     animations: "disabled",
   });
-  await page.locator("header button").click();
+  await page.getByTestId("theme-toggle").click();
   await page.screenshot({
     path: `test-results/home-${testInfo.project.name}-light.png`,
     fullPage: true,

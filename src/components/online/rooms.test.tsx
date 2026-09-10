@@ -141,7 +141,7 @@ describe("room creation and lobby", () => {
       }),
     );
     expect(screen.getByRole("status")).toHaveTextContent("Os dois jogadores");
-    expect(screen.getByText(/Beto/, { selector: "li" })).toBeVisible();
+    expect(screen.getByText("Beto", { selector: ".lobby-player span" })).toBeVisible();
     act(() => connection(false));
     expect(screen.getByRole("status")).toHaveTextContent("Conectando");
     act(() => expired());

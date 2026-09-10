@@ -9,6 +9,7 @@ import {
 } from "@/lib/game";
 import { getComputerMove } from "@/lib/computer";
 import type { Dictionary } from "@/lib/translations";
+import { useGameSounds } from "./use-game-sounds";
 type Session = { game: GameState; playerMark: Mark };
 type Action =
   | { type: "human"; index: number }
@@ -42,6 +43,7 @@ export function useLocalGame(t: Dictionary) {
   });
   const [name, setPlayerName] = useState("");
   const { winner, line } = useMemo(() => getResult(state.board), [state.board]);
+  useGameSounds({ ...state, winner }, playerMark);
   const thinking = !winner && state.turn !== playerMark;
   useEffect(() => {
     if (!thinking) return;

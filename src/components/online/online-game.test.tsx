@@ -111,7 +111,9 @@ describe("online match", () => {
       expect(
         screen.queryByRole("button", { name: translations["pt-BR"].rematchConfirmed }),
       ).not.toBeInTheDocument();
-      expect(screen.getByRole("status")).toHaveTextContent("Beto");
+      expect(screen.getByRole("status")).toHaveTextContent(
+        mark === "O" ? "Sua vez" : "Vez de Beto",
+      );
     },
   );
 
@@ -225,6 +227,7 @@ describe("online match", () => {
       expect(screen.getByRole("heading", { name: "Partida online" })).toBeVisible(),
     );
     expect(send).toHaveBeenLastCalledWith("private", 2, { type: "start" });
+    expect(screen.getByRole("status")).toHaveTextContent("Sua vez");
     expect(screen.getByText("Sua vez! Escolha uma casa vazia.")).toBeVisible();
     send.mockResolvedValue({
       ...playing,

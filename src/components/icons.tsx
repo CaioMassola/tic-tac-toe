@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 
 export type IconName =
+  | "volume"
+  | "muted"
   | "arrow"
   | "back"
   | "sun"
@@ -19,6 +21,18 @@ export type IconName =
 
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
   const paths: Record<IconName, React.ReactNode> = {
+    volume: (
+      <>
+        <path d="M11 4 6 8H3v8h3l5 4V4Z" />
+        <path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
+      </>
+    ),
+    muted: (
+      <>
+        <path d="M11 4 6 8H3v8h3l5 4V4Z" />
+        <path d="m16 9 6 6m0-6-6 6" />
+      </>
+    ),
     arrow: (
       <>
         <path d="M5 12h14m-6-6 6 6-6 6" />

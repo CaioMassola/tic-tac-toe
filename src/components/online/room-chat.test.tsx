@@ -11,6 +11,7 @@ import * as rooms from "@/lib/rooms";
 import { useRoomChat } from "@/hooks/use-room-chat";
 import { translations } from "@/lib/translations";
 import { RoomChat } from "./room-chat";
+import * as audio from "@/lib/sounds";
 
 const t = translations["pt-BR"];
 const players: rooms.Room["players"] = [
@@ -53,6 +54,45 @@ function connection() {
 }
 
 afterEach(() => vi.useRealTimers());
+
+it("sounds only for new incoming messages, not history, own messages or reconnects", () => {
+  const socket = connection();
+  const play = vi.spyOn(audio, "playSound").mockImplementation(() => {});
+  render(<RoomChat membership={membership} players={players} disabled={false} t={t} />);
+  const history: rooms.Chat = {
+    ...empty,
+    revision: 1,
+    messages: [
+      { id: "old", mark: "O", text: "History", sentAt: new Date().toISOString() },
+    ],
+  };
+  socket.update(history);
+  expect(play).not.toHaveBeenCalled();
+  const own: rooms.Chat = {
+    ...history,
+    revision: 2,
+    messages: [
+      ...history.messages,
+      { id: "own", mark: "X", text: "Hello", sentAt: new Date().toISOString() },
+    ],
+  };
+  socket.update(own);
+  expect(play).not.toHaveBeenCalled();
+  const incoming: rooms.Chat = {
+    ...own,
+    revision: 3,
+    messages: [
+      ...own.messages,
+      { id: "new", mark: "O", text: "Hi", sentAt: new Date().toISOString() },
+    ],
+  };
+  socket.update(incoming);
+  expect(play).toHaveBeenCalledExactlyOnceWith("message");
+  socket.connected(false);
+  socket.connected(true);
+  socket.update({ ...incoming });
+  expect(play).toHaveBeenCalledTimes(1);
+});
 
 it("sends messages, preserves failed drafts and blocks empty or duplicate submissions", async () => {
   const socket = connection();

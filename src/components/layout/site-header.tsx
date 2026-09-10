@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ChangeEvent } from "react";
 import { Icon } from "@/components/icons";
 import { Logo } from "./logo";
+import { SoundToggle } from "./sound-toggle";
 import type { Dictionary, Locale } from "@/lib/translations";
 import type { View } from "./app-shell";
 
@@ -72,7 +73,9 @@ export function SiteHeader({
             </select>
           </div>
           <span className="h-5 w-px bg-line" />
+          <SoundToggle t={t} />
           <button
+            data-testid="theme-toggle"
             className="icon-button"
             onClick={toggleTheme}
             aria-label={theme === "dark" ? t.light : t.dark}

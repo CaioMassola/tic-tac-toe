@@ -1,5 +1,7 @@
 export type Locale = "pt-BR" | "en-US" | "es";
 const pt = {
+  muteSounds: "Silenciar sons",
+  enableSounds: "Ativar sons",
   chatTitle: "Chat da sala",
   chatExpand: "Expandir chat",
   chatCollapse: "Recolher chat",
@@ -116,7 +118,7 @@ const pt = {
   roomLobby: "Sala de espera",
   shareCode: "Compartilhe este código com seu amigo para entrar nesta sala.",
   yourMark: "Seu símbolo",
-  waitingPlayer: "Aguardando seu amigo…",
+  waitingPlayer: "Aguardando seu amigo",
   roomReady: "Os dois jogadores estão na sala!",
   reconnecting: "Conectando à sala… Tentaremos novamente automaticamente.",
   sessionExpired: "Esta sessão expirou. Volte e crie uma nova sala.",
@@ -177,6 +179,8 @@ export type Dictionary = { [K in keyof typeof pt]: string };
 
 export type TranslationProps = { t: Dictionary };
 const en: Dictionary = {
+  muteSounds: "Mute sounds",
+  enableSounds: "Enable sounds",
   chatTitle: "Room chat",
   chatExpand: "Expand chat",
   chatCollapse: "Collapse chat",
@@ -292,7 +296,7 @@ const en: Dictionary = {
   roomLobby: "Waiting room",
   shareCode: "Share this code with your friend to join this room.",
   yourMark: "Your mark",
-  waitingPlayer: "Waiting for your friend…",
+  waitingPlayer: "Waiting for your friend",
   roomReady: "Both players are in the room!",
   reconnecting: "Connecting to the room… We will retry automatically.",
   sessionExpired: "This session expired. Go back and create a new room.",
@@ -346,6 +350,8 @@ const en: Dictionary = {
   markChangeNote: "Changing your symbol restarts the game and clears the score.",
 };
 const es: Dictionary = {
+  muteSounds: "Silenciar sonidos",
+  enableSounds: "Activar sonidos",
   chatTitle: "Chat de la sala",
   chatExpand: "Expandir chat",
   chatCollapse: "Contraer chat",
@@ -463,7 +469,7 @@ const es: Dictionary = {
   roomLobby: "Sala de espera",
   shareCode: "Comparte este código con tu amigo para entrar en esta sala.",
   yourMark: "Tu símbolo",
-  waitingPlayer: "Esperando a tu amigo…",
+  waitingPlayer: "Esperando a tu amigo",
   roomReady: "¡Los dos jugadores están en la sala!",
   reconnecting: "Conectando a la sala… Lo intentaremos de nuevo automáticamente.",
   sessionExpired: "Esta sesión caducó. Vuelve y crea una sala nueva.",

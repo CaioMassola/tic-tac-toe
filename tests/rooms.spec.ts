@@ -19,7 +19,7 @@ test("two browsers share a real room and reject a third player", async ({
     await page.goto("/online");
     await page.getByLabel("Seu apelido").fill("Ana");
     await page.getByRole("button", { name: "Criar minha sala" }).click();
-    await expect(page.getByRole("status")).toHaveText("Aguardando seu amigo…");
+    await expect(page.getByRole("status")).toHaveText("Aguardando seu amigo");
     const code = await page.getByTestId("room-code").innerText();
     expect(code).toMatch(/^[A-Z0-9]{6}$/);
     await expect(
@@ -35,7 +35,7 @@ test("two browsers share a real room and reject a third player", async ({
       await expect(participant.getByRole("status")).toHaveText(
         "Os dois jogadores estão na sala!",
       );
-      await expect(participant.getByRole("listitem")).toHaveText(["X — Ana", "O — Beto"]);
+      await expect(participant.getByRole("listitem")).toHaveText(["Ana", "Beto"]);
       await expect(participant.getByTestId("room-code")).toHaveCount(0);
       await expect(
         participant.getByRole("button", { name: "Copiar código" }),
@@ -106,7 +106,9 @@ test("two browsers share a real room and reject a third player", async ({
       await expect(
         participant.getByRole("heading", { name: "Partida online", exact: true }),
       ).toBeVisible();
-      await expect(participant.getByRole("status")).toContainText("Vez de Ana");
+      await expect(participant.getByRole("status")).toContainText(
+        participant === page ? "Sua vez" : "Vez de Ana",
+      );
     }
     await expect(
       guest.getByRole("button", { name: "Casa 1: vazia", exact: true }),
@@ -156,7 +158,7 @@ test("two browsers share a real room and reject a third player", async ({
       "rgb(248, 113, 113)",
     );
     await guest.getByRole("button", { name: "Ana quer jogar novamente" }).click();
-    await expect(guest.getByRole("status")).toContainText("Vez de Beto");
+    await expect(guest.getByRole("status")).toContainText("Sua vez");
     await playRound([1, 4, 2, 5, 3], true);
     for (const participant of [page, guest]) {
       await expect(participant.getByRole("status")).toContainText(

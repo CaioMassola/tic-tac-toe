@@ -453,6 +453,45 @@ select {
 .score-x {
   background: var(--accent-soft);
 }
+.scoreboard-compact {
+  padding: 12px;
+}
+.scoreboard-compact h2 {
+  margin-bottom: 8px;
+}
+.scoreboard-compact .score-box {
+  position: relative;
+  padding: 8px;
+  min-width: 0;
+}
+.scoreboard-compact .score-box > div {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+}
+.scoreboard-compact .score-box .mark {
+  width: 16px;
+  height: 16px;
+}
+.scoreboard-compact .score-box > div > span {
+  font-size: 14px;
+  line-height: 16px;
+}
+.scoreboard-compact .score-box strong {
+  margin-top: 0;
+  font-size: 24px;
+  line-height: 28px;
+}
+.online-match > [role="status"] {
+  margin-top: 10px;
+  margin-bottom: 16px;
+}
+.online-match-playing > [role="status"] > p {
+  display: none;
+}
 .score-o {
   background: var(--lilac-soft);
 }
@@ -624,6 +663,92 @@ select {
   .eyebrow {
     font-size: 9px;
     letter-spacing: 1.3px;
+  }
+}
+.lobby-invite {
+  display: grid;
+  gap: 20px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(120deg, var(--accent-soft), var(--raised));
+}
+.lobby-player {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font-weight: 600;
+}
+.lobby-player-X {
+  background: var(--accent-soft);
+}
+.lobby-player .mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.lobby-player-O {
+  background: var(--lilac-soft);
+}
+.lobby-player-empty {
+  border-style: dashed;
+  color: var(--muted);
+  font-weight: 400;
+}
+.lobby-waiting-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.lobby-waiting-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.3;
+  animation: lobby-waiting-pulse 1.2s infinite;
+}
+.lobby-waiting-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.lobby-waiting-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes lobby-waiting-pulse {
+  0%,
+  40%,
+  100% {
+    opacity: 0.3;
+  }
+  20% {
+    opacity: 1;
+  }
+}
+.button-primary.lobby-start {
+  position: relative;
+  width: 100%;
+  min-height: 60px;
+  justify-content: center;
+  text-align: center;
+  padding-inline: 56px;
+  font-size: 16px;
+}
+.lobby-start svg {
+  position: absolute;
+  right: 24px;
+}
+@media (min-width: 640px) {
+  .lobby-invite {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 .online-room-grid {
