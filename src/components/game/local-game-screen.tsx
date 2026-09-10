@@ -38,8 +38,10 @@ export function LocalGameScreen() {
     <>
       <PageIntro t={t} label={t.localMode} title={t.gameTitle} subtitle={t.gameSub} />
 
-      <div className="grid lg:grid-cols-[1fr_330px] gap-6 items-start">
-        <section className="panel game-panel p-5 sm:p-8">
+      <div className="grid lg:grid-cols-[330px_minmax(0,1fr)] gap-6 items-start">
+        <Scoreboard t={t} scores={state.scores} getPlayerName={getPlayerName} />
+
+        <section className="panel game-panel p-5 sm:p-8 lg:col-start-2 lg:row-start-1 lg:row-span-2">
           <div className="flex items-center justify-between gap-3">
             <span className="badge accent-badge">
               <span className="status-dot" />
@@ -99,9 +101,7 @@ export function LocalGameScreen() {
           </div>
         </section>
 
-        <aside className="space-y-5">
-          <Scoreboard t={t} scores={state.scores} getPlayerName={getPlayerName} />
-
+        <aside className="space-y-5 lg:col-start-1 lg:row-start-2">
           <PlayerSettings
             t={t}
             name={name}

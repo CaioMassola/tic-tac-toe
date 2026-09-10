@@ -25,7 +25,8 @@ export function OnlineGame({ t, game, players, mark, blocked, onMove, onNext }: 
 
   return (
     <div className="mt-6">
-      <p className="text-sm text-muted">
+      <Scoreboard t={t} scores={game.scores} getPlayerName={getPlayerName} />
+      <p className="text-sm text-muted mt-6">
         {t.round} {game.round}
       </p>
       <GameStatus
@@ -78,7 +79,6 @@ export function OnlineGame({ t, game, players, mark, blocked, onMove, onNext }: 
         )}
       </div>
       <div className="space-y-4">
-        <Scoreboard t={t} scores={game.scores} getPlayerName={getPlayerName} />
         <RoundHistory t={t} history={game.history} getPlayerName={getPlayerName} />
       </div>
     </div>
